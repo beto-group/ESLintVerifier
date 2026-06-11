@@ -364,7 +364,7 @@ export default [
 
             const child = child_process.spawn('node', args, {
                 cwd: absoluteTargetPath,
-                shell: true,
+                shell: false,
                 env: {
                     ...process.env,
                     PATH: envPath
