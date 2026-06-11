@@ -294,7 +294,8 @@ export default [
     ignores: [
       '**/temp-eslint-config.mjs',
       '**/manifest.json',
-      '**/node_modules/**'
+      '**/node_modules/**',
+      '**/data/**'
     ]
   },
   js.configs.recommended,
