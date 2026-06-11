@@ -166,6 +166,28 @@ const LinterService = {
         return false;
     },
 
+    async findFolderInVault(vaultPath, folderName) {
+        if (!fs) return null;
+        try {
+            const items = await fs.promises.readdir(vaultPath);
+            for (const item of items) {
+                if (item === 'node_modules' || item === '.git' || item === 'data' || item.startsWith('.')) continue;
+                const fullPath = path.join(vaultPath, item);
+                const stat = await fs.promises.stat(fullPath);
+                if (stat.isDirectory()) {
+                    if (item.toLowerCase() === folderName.toLowerCase()) {
+                        return fullPath;
+                    }
+                    const subResult = await this.findFolderInVault(fullPath, folderName);
+                    if (subResult) return subResult;
+                }
+            }
+        } catch (err) {
+            console.error("findFolderInVault error:", err);
+        }
+        return null;
+    },
+
     async runLint(dc, cacheDir, targetPath, fix = false, onStdout = null, onStderr = null) {
         if (!this.isSupported()) throw new Error("Node process execution is not supported.");
 
@@ -174,6 +196,30 @@ const LinterService = {
         
         let targetSubPath = targetPath;
         let absoluteTargetPath = path.join(vaultPath, targetSubPath);
+
+        // Check if directory exists, if not search for it recursively in the vault
+        let exists = await new Promise((resolve) => {
+            fs.access(absoluteTargetPath, fs.constants.F_OK, (err) => resolve(!err));
+        });
+
+        if (!exists && targetPath) {
+            const pathParts = targetPath.split(/[/\\]+/).filter(Boolean);
+            const searchName = pathParts[pathParts.length - 1];
+            if (searchName) {
+                if (onStdout) {
+                    onStdout(`Target folder not found at "${targetPath}". Searching vault recursively for "${searchName}"...\n`);
+                }
+                const foundPath = await this.findFolderInVault(vaultPath, searchName);
+                if (foundPath) {
+                    absoluteTargetPath = foundPath;
+                    targetSubPath = foundPath.substring(vaultPath.length).replace(/^[/\\]+/, '');
+                    if (onStdout) {
+                        onStdout(`Located target folder at: ${targetSubPath}\n`);
+                    }
+                    exists = true;
+                }
+            }
+        }
 
         // Check if there are any lintable files in target directory. If not, look in common paths.
         let hasFiles = await this.hasLintableFiles(absoluteTargetPath);
