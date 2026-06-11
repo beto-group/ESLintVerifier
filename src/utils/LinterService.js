@@ -160,8 +160,8 @@ const LinterService = {
                     }
                 }
             }
-        } catch {
-            // Ignore error and return false
+        } catch (err) {
+            console.error(`[ESLintVerifier] readdir/stat failed for path "${dir}":`, err);
         }
         return false;
     },
