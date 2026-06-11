@@ -3,7 +3,7 @@ author: beto.group
 contributor: []
 version: 1.0.0
 id: eslint-verifier-159
-name: ESLint Verifier
+name: ESLINT VERIFIER
 description: An interactive developer tool to check and fix Obsidian Datacore components against official Obsidian ESLint verification rules.
 status: stable
 complexity: advanced
